@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CKEditor description list plugin</title>
+	<script src="../../ckeditor/ckeditor.js"></script>
+	<link href="../../ckeditor/samples/sample.css" rel="stylesheet">
+</head>
+<body>
+	<h1 class="samples">
+		CKEditor description list plugin
+	</h1>
+
+	<textarea id="editor1" cols="10" rows="10">
+
+		<p>Foo1</p>
+		<p>Foo2</p>
+		<p>Foo3</p>
+		<p>Foo4</p>
+		<p>Foo5</p>
+		<p>Foo6</p>
+		<p>Foo7</p>
+
+		<ul>
+			<li>Foo5</li>
+			<li>Foo6</li>
+			<li>Foo7</li>
+		</ul>
+
+	</textarea>
+
+	<script>
+
+		CKEDITOR.plugins.addExternal( 'descriptionlist', '../plugin/' );
+
+		CKEDITOR.replace( 'editor1', {
+			extraPlugins: 'descriptionlist',
+			removePlugins: 'forms,justify,flash,iframe,smiley,colorbutton,font,div,bidi',
+			height: 450
+		} );
+
+	</script>
+</body>
+</html>
