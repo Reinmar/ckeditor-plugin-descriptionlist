@@ -55,6 +55,15 @@
 			editor.addCommand( 'descriptionValue', {
 				contextSensitive: true,
 
+				exec: function( editor ) {
+					var sel = editor.getSelection(),
+						range = sel.getRanges()[ 0 ];
+
+					plugin.toggleListElementsTo( editor, range, this.state == CKEDITOR.TRISTATE_OFF ? 'dd' : 'dt' );
+
+					sel.selectRanges( [ range ] );
+				},
+
 				refresh: refreshDtDdCallback( 'dd' )
 			} );
 

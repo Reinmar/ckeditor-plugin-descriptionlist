@@ -39,3 +39,19 @@ test( 'on alternating dd and dt', function() {
 	tests.editor.execCommand( 'descriptionTerm' );
 	assert.areSame( '<dl><dd>[foo</dd><dd>bar</dd><dd>bom]</dd></dl>', tests.getHtmlWithSelection() );
 } );
+
+suite( 'Description value - switch to dd' );
+
+test( 'on a single dt', function() {
+	tests.setHtmlWithSelection( '<dl><dt>x</dt><dt>[]foo</dt><dt>x</dt></dl>' );
+	tests.editor.execCommand( 'descriptionValue' );
+	assert.areSame( '<dl><dt>x</dt><dd>[]foo</dd><dt>x</dt></dl>', tests.getHtmlWithSelection() );
+} );
+
+suite( 'Description value - switch to dt' );
+
+test( 'on a single dd', function() {
+	tests.setHtmlWithSelection( '<dl><dd>x</dd><dd>[]foo</dd><dd>x</dd></dl>' );
+	tests.editor.execCommand( 'descriptionValue' );
+	assert.areSame( '<dl><dd>x</dd><dt>[]foo</dt><dd>x</dd></dl>', tests.getHtmlWithSelection() );
+} );
