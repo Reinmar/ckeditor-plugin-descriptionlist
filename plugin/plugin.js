@@ -2,7 +2,8 @@
 
 ( function() {
 
-	var listElementNames = { dt: 1, dd: 1 };
+	var listElementNames = { dt: 1, dd: 1 },
+		allListElementNames = { li: 1, dt: 1, dd: 1 };
 
 	CKEDITOR.plugins.add( 'descriptionlist', {
 		lang: 'en',
@@ -86,22 +87,41 @@
 	} );
 
 	CKEDITOR.plugins.descriptionList = {
+		/**
+		 * Note: range must not start in description list.
+		 */
 		createListFromRange: function( editor, range ) {
-			var bm = range.createBookmark(),
+			var startPath = range.startPath(),
+				bm = range.createBookmark(),
 				iterator = range.createIterator(),
+				previousNode, lastElement,
 				block,
 				blocks = [],
 				list,
+				// Lists (dl,ol,ul) that we may empty when moving blocks
+				// to newly created dl. These lists should be removed.
 				listsToCheck = [],
 				dl,
 				createDt = true,
 				i, lastBlockParent;
 
+			// Check first node before block in which selection starts.
+			// If it's a dl then we'll append new elements to the existing list.
+			if ( ( previousNode = startPath.block.getPrevious( isNotIgnored ) ) && isDl( previousNode ) ) {
+				dl = previousNode;
+				lastElement = dl.getLast( isDtOrDd );
+				if ( lastElement ) {
+					createDt = lastElement.is( 'dd' );
+				}
+			}
+
 			while ( ( block = iterator.getNextParagraph() ) ) {
 				blocks.push( block );
 			}
 
-			dl = this.createListContainer( editor, blocks[ 0 ] );
+			if ( !dl ) {
+				dl = this.createListContainer( editor, blocks[ 0 ] );
+			}
 
 			// We need to remember last block's parent now, cause we'll lost it after
 			// moving blocks to created list.
@@ -117,8 +137,7 @@
 					listsToCheck.push( list );
 				}
 
-				createListElement( dl, block, createDt );
-				createDt = !createDt;
+				createDt = createListElement( dl, block, createDt );
 			}
 
 			while ( ( list = listsToCheck.shift() ) ) {
@@ -247,12 +266,22 @@
 		}
 	};
 
+	// @returns {Boolean} Whether next list element should be a dt.
 	function createListElement( dl, block, createDt ) {
-		var newBlock = block.getDocument().createElement( createDt ? 'dt' : 'dd' );
-		block.moveChildren( newBlock );
-		newBlock.appendTo( dl );
-		block.remove();
-		return newBlock;
+		// It may happen that we are processing a block which already is a dt or dd
+		// (e.g. we're extending a dl). Just move the block to new dl container.
+		if ( block.is( listElementNames ) ) {
+			block.appendTo( dl );
+
+			return block.is( 'dd' );
+		} else {
+			var newBlock = block.getDocument().createElement( createDt ? 'dt' : 'dd' );
+			block.moveChildren( newBlock );
+			newBlock.appendTo( dl );
+			block.remove();
+
+			return !createDt;
+		}
 	}
 
 	function isBlockEmpty( list ) {
@@ -280,14 +309,23 @@
 		};
 	}
 
+	function isDtOrDd( node ) {
+		return node.type == CKEDITOR.NODE_ELEMENT && node.is( listElementNames );
+	}
+
+	var isNotIgnored = CKEDITOR.dom.walker.ignored( true ),
+		isDl = isElement( 'dl' );
+
+	// Returns dl, ol or ul element being direct parent or
+	// parent's parent of passed block.
 	function getWrappingList( block ) {
 		var blockParent = block.getParent();
 
-		if ( block.is( 'li' ) ) {
+		if ( block.is( allListElementNames ) ) {
 			return blockParent;
 		// <li> cannot be the editable, so we don't have to check whether
 		// we're not leaking from it.
-		} else if ( blockParent && blockParent.is( 'li' ) ) {
+		} else if ( blockParent && blockParent.is( allListElementNames ) ) {
 			return blockParent.getParent();
 		}
 	}

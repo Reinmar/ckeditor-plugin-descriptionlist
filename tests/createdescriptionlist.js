@@ -8,6 +8,12 @@ test( 'on a single paragraph', function() {
 	assert.areSame( '<dl><dt>[]foo</dt></dl>', tests.getHtmlWithSelection() );
 } );
 
+test( 'on a single paragraph close to another dl', function() {
+	tests.setHtmlWithSelection( '<dl><dt>x</dt></dl><p>y</p><p>[]foo</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl><dt>x</dt></dl><p>y</p><dl><dt>[]foo</dt></dl>', tests.getHtmlWithSelection() );
+} );
+
 test( 'on a single paragraph between paragraphs', function() {
 	tests.setHtmlWithSelection( '<p>x</p><p>[]foo</p><p>y</p>' );
 	tests.editor.execCommand( 'descriptionList' );
@@ -111,5 +117,63 @@ test( 'on list after paragraph', function() {
 	tests.setHtmlWithSelection( '<p>x</p><p>[foo</p><ul><li>bar</li><li>bom]</li><li>bim</li></ul><p>x</p>' );
 	tests.editor.execCommand( 'descriptionList' );
 	assert.areSame( '<p>x</p><dl><dt>[foo</dt><dd>bar</dd><dt>bom]</dt></dl><ul><li>bim</li></ul><p>x</p>',
+		tests.getHtmlWithSelection() );
+} );
+
+suite( 'Description list - append at the end of list' );
+
+test( 'list (dt+dd) followed by paragraph', function() {
+	tests.setHtmlWithSelection( '<dl class="a"><dt>x</dt><dd>bar</dd></dl><p>foo[]</p><p>x</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl class="a"><dt>x</dt><dd>bar</dd><dt>foo[]</dt></dl><p>x</p>', tests.getHtmlWithSelection() );
+} );
+
+test( 'list (dt) followed by paragraph', function() {
+	tests.setHtmlWithSelection( '<dl class="a"><dt>x</dt></dl><p>foo[]</p><p>x</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl class="a"><dt>x</dt><dd>foo[]</dd></dl><p>x</p>', tests.getHtmlWithSelection() );
+} );
+
+test( 'list (dt) followed by paragraphs', function() {
+	tests.setHtmlWithSelection( '<dl class="a"><dt>x</dt></dl><p>[foo</p><p>bar]</p><p>x</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl class="a"><dt>x</dt><dd>[foo</dd><dt>bar]</dt></dl><p>x</p>', tests.getHtmlWithSelection() );
+} );
+
+suite( 'Description list - append at the beginning list' );
+
+test( 'list preceded by paragraph', function() {
+	tests.setHtmlWithSelection( '<p>x</p><p>[]foo</p><dl class="a"><dt>bar</dt><dd>x</dd></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><dl class="a"><dt>[]foo</dt><dt>bar</dt><dd>x</dd></dl>', tests.getHtmlWithSelection() );
+} );
+
+test( 'list preceded by paragraphs', function() {
+	tests.setHtmlWithSelection( '<p>x</p><p>[foo</p><p>bar</p><p>bom]</p><dl class="a"><dt>x</dt></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><dl class="a"><dt>[foo</dt><dd>bar</dd><dt>bom]</dt><dt>x</dt></dl>',
+		tests.getHtmlWithSelection() );
+} );
+
+test( 'list preceded by paragraphs, selection ending in list', function() {
+	tests.setHtmlWithSelection( '<p>x</p><p>[foo</p><p>bar</p><p>bom</p><dl class="a"><dt>x]</dt><dd>y</dd></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><dl class="a"><dt>[foo</dt><dd>bar</dd><dt>bom</dt><dt>x]</dt><dd>y</dd></dl>',
+		tests.getHtmlWithSelection() );
+} );
+
+test( 'list preceded by paragraphs, selection ending in list, second list included', function() {
+	tests.setHtmlWithSelection( '<p>x</p><p>[foo</p>dl class="b"><dt>bar</dt></dl><dl class="a"><dt>x]</dt><dd>y</dd></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><dl class="a"><dt>[foo</dt><dt>bar</dt><dt>x]</dt><dd>y</dd></dl>',
+		tests.getHtmlWithSelection() );
+} );
+
+suite( 'Description list - extend list' );
+
+test( 'list preceded and followed by paragraphs', function() {
+	tests.setHtmlWithSelection( '<p>x</p><p>[foo</p><dl class="a"><dt>x</dt><dd>y</dd></dl><p>bar]</p><p>x</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><dl><dt>[foo</dt><dt>x</dt><dd>y</dd><dt>bar]</dt></dl><p>x</p>',
 		tests.getHtmlWithSelection() );
 } );
