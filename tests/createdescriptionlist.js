@@ -163,7 +163,8 @@ test( 'list preceded by paragraphs, selection ending in list', function() {
 } );
 
 test( 'list preceded by paragraphs, selection ending in list, second list included', function() {
-	tests.setHtmlWithSelection( '<p>x</p><p>[foo</p>dl class="b"><dt>bar</dt></dl><dl class="a"><dt>x]</dt><dd>y</dd></dl>' );
+	tests.setHtmlWithSelection(
+		'<p>x</p><p>[foo</p><dl class="b"><dt>bar</dt></dl><dl class="a"><dt>x]</dt><dd>y</dd></dl>' );
 	tests.editor.execCommand( 'descriptionList' );
 	assert.areSame( '<p>x</p><dl class="a"><dt>[foo</dt><dt>bar</dt><dt>x]</dt><dd>y</dd></dl>',
 		tests.getHtmlWithSelection() );

@@ -95,6 +95,7 @@
 				bm = range.createBookmark(),
 				iterator = range.createIterator(),
 				previousNode, lastElement,
+				nextNode,
 				block,
 				blocks = [],
 				list,
@@ -149,6 +150,12 @@
 
 			if ( lastBlockParent && lastBlockParent.is( 'li' ) && isBlockEmpty( lastBlockParent ) ) {
 				lastBlockParent.remove();
+			}
+
+			// If newly create list is followed by another list, merge them.
+			if ( ( nextNode = dl.getNext( isNotIgnored ) ) && isDl( nextNode ) ) {
+				dl.moveChildren( nextNode, true );
+				dl.remove();
 			}
 
 			range.moveToBookmark( bm );
