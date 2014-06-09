@@ -91,35 +91,28 @@
 		 * Note: range must not start in description list.
 		 */
 		createListFromRange: function( editor, range ) {
-			var startPath = range.startPath(),
-				bm = range.createBookmark(),
+			var bm = range.createBookmark(),
 				iterator = range.createIterator(),
-				previousNode, lastElement,
-				nextNode,
-				block,
 				blocks = [],
-				list,
 				// Lists (dl,ol,ul) that we may empty when moving blocks
 				// to newly created dl. These lists should be removed.
 				listsToCheck = [],
-				dl,
-				createDt = true,
-				i, lastBlockParent;
+				startWithDt = true,
+				lastBlockParent, dl, block;
 
 			// Check first node before block in which selection starts.
 			// If it's a dl then we'll append new elements to the existing list.
-			if ( ( previousNode = startPath.block.getPrevious( isNotIgnored ) ) && isDl( previousNode ) ) {
-				dl = previousNode;
-				lastElement = dl.getLast( isDtOrDd );
-				if ( lastElement ) {
-					createDt = lastElement.is( 'dd' );
-				}
+			if ( ( dl = findPrecedingListContainer( range ) ) ) {
+				startWithDt = listEndsWithDd( dl );
 			}
 
+			// Scan range and remember all blocks.
 			while ( ( block = iterator.getNextParagraph() ) ) {
 				blocks.push( block );
 			}
 
+			// If list container has not been created yet, create it now from the
+			// first block.
 			if ( !dl ) {
 				dl = this.createListContainer( editor, blocks[ 0 ] );
 			}
@@ -130,33 +123,18 @@
 				lastBlockParent = blocks[ blocks.length - 1 ].getParent();
 			}
 
-			for ( i = 0; i < blocks.length; ++i ) {
-				block = blocks[ i ];
+			moveBlocksToListContainer( dl, blocks, startWithDt, listsToCheck );
 
-				list = getWrappingList( block );
-				if ( list ) {
-					listsToCheck.push( list );
-				}
-
-				createDt = createListElement( dl, block, createDt );
-			}
-
-			while ( ( list = listsToCheck.shift() ) ) {
-				// It could already be removed.
-				if ( list.getParent() && isBlockEmpty( list ) ) {
-					list.remove();
-				}
-			}
+			// Remove list containers that we could empty when moving
+			// block (in this case list items) to definition list container.
+			cleanUpEmptiedLists( listsToCheck );
 
 			if ( lastBlockParent && lastBlockParent.is( 'li' ) && isBlockEmpty( lastBlockParent ) ) {
 				lastBlockParent.remove();
 			}
 
 			// If newly create list is followed by another list, merge them.
-			if ( ( nextNode = dl.getNext( isNotIgnored ) ) && isDl( nextNode ) ) {
-				dl.moveChildren( nextNode, true );
-				dl.remove();
-			}
+			mergeToFollowingListContainer( dl );
 
 			range.moveToBookmark( bm );
 		},
@@ -273,6 +251,19 @@
 		}
 	};
 
+	// Checks passed list containers (ul, ol, dl) and removes empty ones.
+	// @param {CKEDITOR.dom.element[]} listsToCheck
+	function cleanUpEmptiedLists( listsToCheck ) {
+		var list;
+
+		while ( ( list = listsToCheck.shift() ) ) {
+			// It could be already removed.
+			if ( list.getParent() && isBlockEmpty( list ) ) {
+				list.remove();
+			}
+		}
+	}
+
 	// @returns {Boolean} Whether next list element should be a dt.
 	function createListElement( dl, block, createDt ) {
 		// It may happen that we are processing a block which already is a dt or dd
@@ -288,6 +279,28 @@
 			block.remove();
 
 			return !createDt;
+		}
+	}
+
+	// Finds list container that precedes block in which range starts.
+	// @returns CKEDITOR.dom.element List container or null.
+	function findPrecedingListContainer( range ) {
+		var previousNode = range.startPath().block.getPrevious( isNotIgnored );
+
+		return ( previousNode && isDl( previousNode ) ) ? previousNode : null;
+	}
+
+	// Returns dl, ol or ul element being direct parent or
+	// parent's parent of passed block.
+	function getWrappingList( block ) {
+		var blockParent = block.getParent();
+
+		if ( block.is( allListElementNames ) ) {
+			return blockParent;
+		// <li> cannot be the editable, so we don't have to check whether
+		// we're not leaking from it.
+		} else if ( blockParent && blockParent.is( allListElementNames ) ) {
+			return blockParent.getParent();
 		}
 	}
 
@@ -323,17 +336,44 @@
 	var isNotIgnored = CKEDITOR.dom.walker.ignored( true ),
 		isDl = isElement( 'dl' );
 
-	// Returns dl, ol or ul element being direct parent or
-	// parent's parent of passed block.
-	function getWrappingList( block ) {
-		var blockParent = block.getParent();
+	// Checks if list ends with a dd element.
+	// @returns {Boolean}
+	function listEndsWithDd( dl ) {
+		var lastElement = dl.getLast( isDtOrDd );
+		return lastElement ? lastElement.is( 'dd' ) : false;
+	}
 
-		if ( block.is( allListElementNames ) ) {
-			return blockParent;
-		// <li> cannot be the editable, so we don't have to check whether
-		// we're not leaking from it.
-		} else if ( blockParent && blockParent.is( allListElementNames ) ) {
-			return blockParent.getParent();
+	// Looks for list container that follows the passed one
+	// and if found moves children of the passed one to the following one.
+	function mergeToFollowingListContainer( dl ) {
+		var nextNode = dl.getNext( isNotIgnored );
+
+		if ( nextNode && isDl( nextNode ) ) {
+			dl.moveChildren( nextNode, true );
+			dl.remove();
+		}
+	}
+
+	// @param {CKEDITOR.dom.element} dl List container to which blocks will be appended.
+	// @param {CKEDITOR.dom.element[]} blocks Blocks that will be transformed to dt/dd and appended
+	// to list container.
+	// @param {Boolean} startWithDt Whether first block should be transformed to dt or dd.
+	// @param {CKEDITOR.dom.element[]} Array to which lists containers (ul, ol, dl) that might
+	// be emptied when moving blocks will be pushed.
+	function moveBlocksToListContainer( dl, blocks, startWithDt, listsToCheck ) {
+		var i = 0,
+			createDt = startWithDt,
+			list, block;
+
+		for ( ; i < blocks.length; ++i ) {
+			block = blocks[ i ];
+
+			list = getWrappingList( block );
+			if ( list ) {
+				listsToCheck.push( list );
+			}
+
+			createDt = createListElement( dl, block, createDt );
 		}
 	}
 
