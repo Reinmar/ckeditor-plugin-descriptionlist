@@ -178,3 +178,26 @@ test( 'list preceded and followed by paragraphs', function() {
 	assert.areSame( '<p>x</p><dl><dt>[foo</dt><dt>x</dt><dd>y</dd><dt>bar]</dt></dl><p>x</p>',
 		tests.getHtmlWithSelection() );
 } );
+
+suite( 'Description list - join lists' );
+
+test( 'paragraph between lists', function() {
+	tests.setHtmlWithSelection( '<dl class="a"><dt>x</dt></dl><p>[]foo</p><dl class="b"><dt>y</dt></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl class="b"><dt>x</dt><dd>[]foo</dd><dt>y</dt></dl>',
+		tests.getHtmlWithSelection() );
+} );
+
+test( 'paragraphs between lists', function() {
+	tests.setHtmlWithSelection( '<dl class="a"><dt>x</dt></dl><p>[foo</p><p>bar]</p><dl class="b"><dt>y</dt></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl class="b"><dt>x</dt><dd>[foo</dd><dt>bar]</dt><dt>y</dt></dl>',
+		tests.getHtmlWithSelection() );
+} );
+
+test( 'paragraph between lists, selection ending in following list', function() {
+	tests.setHtmlWithSelection( '<dl class="a"><dt>x</dt></dl><p>[foo</p><dl class="b"><dd>bar]</dd><dt>y</dt></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<dl class="b"><dt>x</dt><dd>[foo</dd><dd>bar]</dd><dt>y</dt></dl>',
+		tests.getHtmlWithSelection() );
+} );
