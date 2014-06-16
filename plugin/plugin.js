@@ -26,7 +26,7 @@
 					if ( this.state == CKEDITOR.TRISTATE_OFF ) {
 						plugin.createListFromRange( editor, range );
 					} else {
-						plugin.removeFrom( editor, range );
+						plugin.removeListFromRange( editor, range );
 					}
 
 					sel.selectRanges( [ range ] );
@@ -139,8 +139,10 @@
 			range.moveToBookmark( bm );
 		},
 
-		// Requirement - range starts in dl.
-		removeFrom: function( editor, range ) {
+		/**
+		 * Note: range must start in description list.
+		 */
+		removeListFromRange: function( editor, range ) {
 			var bm = range.createBookmark(),
 				iterator = range.createIterator(),
 				block,
@@ -148,34 +150,46 @@
 				blocks = [];
 
 			while ( ( block = iterator.getNextParagraph() ) ) {
-				blocks.push( block );
+				if ( block.is( listElementNames ) ) {
+					blocks.push( block );
+				}
 			}
 
-			firstBlock = blocks[ 0 ];
+			var block = blocks.shift();
 
-			var splitRange = editor.createRange();
-			splitRange.moveToPosition( firstBlock, CKEDITOR.POSITION_BEFORE_START );
-			var firstDl = firstBlock.getAscendant( 'dl' ),
-				secondDl = splitRange.splitElement( firstDl );
+			var currentList = block.getParent(),
+				splitRange = editor.createRange(),
+				listsToCheck = [ currentList ],
+				list;
+
+			splitRange.moveToPosition( block, CKEDITOR.POSITION_BEFORE_START );
+			currentList = splitRange.splitElement( currentList );
+			listsToCheck.push( currentList );
+			block.renameNode( 'p' );
+			block.insertBefore( currentList );
 
 			while ( ( block = blocks.shift() ) ) {
-				this.turnToParagraph( block ).insertBefore( secondDl );
+				list = block.getParent();
+				if ( list.equals( currentList ) ) {
+					block.renameNode( 'p' );
+					block.insertBefore( currentList );
+				} else {
+					listsToCheck.push( list );
+					splitRange.moveToPosition( block, CKEDITOR.POSITION_BEFORE_START );
+					currentList = splitRange.splitElement( list );
+					listsToCheck.push( currentList );
+					block.renameNode( 'p' );
+					block.insertBefore( currentList );
+				}
+			}
+
+			while ( ( list = listsToCheck.pop() ) ) {
+				if ( list.getParent && isBlockEmpty( list ) ) {
+					list.remove();
+				}
 			}
 
 			range.moveToBookmark( bm );
-		},
-
-		// If not a DT/DD, then return.
-		// If DT/DD create new P, move all children, detach old element and return new one.
-		turnToParagraph: function( block ) {
-			if ( !block.is( listElementNames ) ) {
-				return block;
-			}
-
-			var newBlock = block.getDocument().createElement( 'p' );
-			block.moveChildren( newBlock );
-			block.remove();
-			return newBlock;
 		},
 
 		createListContainer: function( editor, block ) {
