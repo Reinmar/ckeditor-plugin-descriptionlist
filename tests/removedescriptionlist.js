@@ -50,6 +50,15 @@ test( 'through an ordered list', function() {
 	assert.areSame( '<p>[x</p><ul class="foo"><li>a</li><li>b</li></ul><p>y]</p>', tests.getHtmlWithSelection() );
 } );
 
+test( 'on a selection starting ina single-item list ending outside the list', function() {
+	tests.setHtmlWithSelection( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	// Expected result but impossible because of http://dev.ckeditor.com/ticket/12178.
+	// assert.areSame( '<p>x</p><p>foo[</p><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
+	// Incorrect, temporary result.
+	assert.areSame( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
+} );
+
 suite( 'Description list - removing from a multiple lists' );
 
 test( 'start and end in different lists', function() {

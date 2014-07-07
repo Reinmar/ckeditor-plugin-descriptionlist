@@ -157,6 +157,14 @@
 
 			var block = blocks.shift();
 
+			// Temporary workaround for a case that should not happen.
+			// See http://dev.ckeditor.com/ticket/12178
+			// and test "on a selection starting ina single-item list ending outside the list".
+			if ( !block ) {
+				range.moveToBookmark( bm );
+				return;
+			}
+
 			var currentList = block.getParent(),
 				splitRange = editor.createRange(),
 				listsToCheck = [ currentList ],
