@@ -1,7 +1,8 @@
 {
 	"excludeFiles": [
 		"ckeditor/*",
-		"node_modules/*"
+		"node_modules/*",
+		"tests/jquery*.js"
 	],
 
 	"requireCurlyBraces": [
@@ -34,16 +35,13 @@
 		"?", "=", "+", "-", "/", "*", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "|", "||", "&", "&&", "^",
 		"+=", "*=", "-=", "/=", "^="
 	],
-	"disallowLeftStickedOperators": [
-		"?", "=", "+", "-", "/", "*", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "|", "||", "&", "&&", "^",
-		"+=", "*=", "-=", "/=", "^="
-	],
-	"disallowRightStickedOperators": [
-		"?", "=", "/", "*", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "|", "||", "&", "&&", "^",
-		"+=", "*=", "-=", "/=", "^="
-	],
 	"requireSpaceBeforeBinaryOperators": [
-		"+", "-", "/", "*", "==", "===", "!=", "!=="
+		"+", "-", "/", "*", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "|", "||", "&", "&&", "^",
+		"+=", "*=", "-=", "/=", "^="
+	],
+	"requireSpaceAfterBinaryOperators": [
+		"+", "-", "/", "*", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "|", "||", "&", "&&", "^",
+		"+=", "*=", "-=", "/=", "^="
 	],
 	"disallowSpaceAfterPrefixUnaryOperators": [
 		"++", "--", "+", "-", "~", "!"
@@ -62,7 +60,5 @@
 	"maximumLineLength": 120,
 	"safeContextKeyword": [ "that", "bender" ],
 	"requireDotNotation": true,
-	"disallowYodaConditions": true,
-	"requireLeftStickedOperators": [ "," ],
-	"requireRightStickedOperators": [ "!" ]
+	"disallowYodaConditions": true
 }
