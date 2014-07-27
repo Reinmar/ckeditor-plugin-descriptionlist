@@ -83,6 +83,8 @@
 				command: 'descriptionValue',
 				toolbar: 'list,120'
 			} );
+
+			handleEnterKey( editor );
 		}
 	} );
 
@@ -260,7 +262,7 @@
 			walker = new CKEDITOR.dom.walker( walkerRange );
 
 			while ( ( node = walker.next() ) ) {
-				if ( isElementToToggle ( node ) ) {
+				if ( isElementToToggle( node ) ) {
 					elementsToToggle.push( node );
 				}
 			}
@@ -326,6 +328,49 @@
 		}
 	}
 
+	// Handle enter:
+	// * At the end of list item - toggle from dt to dl and vice versa.
+	// * In an empty list item - exit the list.
+	function handleEnterKey( editor ) {
+		var cmd = editor.getCommand( 'enter' );
+		if ( !cmd ) {
+			return;
+		}
+
+		cmd.on( 'exec', function( evt ) {
+			if ( !isSelectionInListItem( editor ) ) {
+				return;
+			}
+
+			var range = editor.getSelection().getRanges()[ 0 ];
+
+			// Collapsed selection in an empty list item - exit the list.
+			if ( range.collapsed && range.checkEndOfBlock() && range.checkStartOfBlock() ) {
+				editor.execCommand( 'descriptionList' );
+				evt.cancel();
+			}
+		} );
+
+		editor.on( 'beforeCommandExec', function( evt ) {
+			if ( evt.data.name != 'enter' || !isSelectionInListItem( editor ) ) {
+				return;
+			}
+
+			var range = editor.getSelection().getRanges()[ 0 ];
+
+			// Collapsed selection at the end of list item - toggle newly created item.
+			if ( range.collapsed && range.checkEndOfBlock() && !range.checkStartOfBlock() ) {
+				evt.data.toggleDescriptionListBlock = true;
+			}
+		} );
+
+		editor.on( 'afterCommandExec', function( evt ) {
+			if ( evt.data.name == 'enter' && evt.data.toggleDescriptionListBlock  ) {
+				editor.execCommand( 'descriptionTerm' );
+			}
+		} );
+	}
+
 	function isBlockEmpty( list ) {
 		var isNotIgnored = CKEDITOR.dom.walker.ignored( true ),
 			range = new CKEDITOR.dom.range( list.getDocument() ),
@@ -357,6 +402,12 @@
 
 	var isNotIgnored = CKEDITOR.dom.walker.ignored( true ),
 		isDl = isElement( 'dl' );
+
+	// Checks whether selection is in list item (but not deeper - e.g. in <dt><p>^</p></dt>).
+	function isSelectionInListItem( editor ) {
+		var path = editor.elementPath();
+		return path.block && path.block.is( listElementNames );
+	}
 
 	// Checks if list ends with a dd element.
 	// @returns {Boolean}

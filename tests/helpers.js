@@ -6,7 +6,7 @@ tests.setHtmlWithSelection = function( html ) {
 		range = editor.createRange();
 
 	editable.setHtml(
-		html
+		tests.encodeBogus( html )
 			.replace( '[', '<span id="selectionStart"></span>' )
 			.replace( ']', '<span id="selectionEnd"></span>' )
 	);
@@ -37,7 +37,11 @@ tests.getHtmlWithSelection = function() {
 		endText.insertAfter( startText );
 	}
 
-	return editor.getData();
+	return editor.getData().replace( /\u00a0/g, '&nbsp;' );
+};
+
+tests.encodeBogus = function( html ) {
+	return html.replace( /@/g, CKEDITOR.env.needsBrFiller ? '<br />' : '' );
 };
 
 suite( 'Helpers' );
@@ -78,6 +82,20 @@ test( 'make non-collapsed selection', function( done ) {
 	} );
 } );
 
+test( 'encode bogus br when making selection', function( done ) {
+	var editor = tests.editor;
+
+	editor.setData( '', function() {
+		tests.setHtmlWithSelection( '<p>x[]x@</p>' );
+
+		var range = editor.getSelection().getRanges()[ 0 ];
+
+		assert.ok( editor.editable().findOne( 'p' ).getBogus() );
+
+		done();
+	} );
+} );
+
 test( 'get collapsed selection', function() {
 	tests.setHtmlWithSelection( '<p>foo[]bar</p>' );
 
@@ -87,10 +105,14 @@ test( 'get collapsed selection', function() {
 } );
 
 test( 'get non-collapsed selection', function() {
-
 	tests.setHtmlWithSelection( '<h1>[foo</h1><p>bar]</p>' );
 
 	var html = tests.getHtmlWithSelection();
 
 	assert.areSame( '<h1>[foo</h1><p>bar]</p>', html, 'html with selection' );
 } );
+
+test( 'encodeBogus', function() {
+	assert.areSame( 'a', tests.encodeBogus( 'a' ), 'no @' );
+	assert.areNotSame( 'a@b@', tests.encodeBogus( 'a@b@' ), '2 @' );
+} )

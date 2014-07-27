@@ -18,6 +18,9 @@
 		window.assert.areSame = function( expected, actual, msg ) {
 			window.assert.strictEqual( actual, expected, msg );
 		};
+		window.assert.areNotSame = function( expected, actual, msg ) {
+			window.assert.notStrictEqual( actual, expected, msg );
+		};
 		window.tests = {
 			plugins: 'toolbar,floatingspace,undo,enterkey,descriptionlist'
 		};
