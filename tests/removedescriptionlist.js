@@ -54,9 +54,12 @@ test( 'on a selection starting ina single-item list ending outside the list', fu
 	tests.setHtmlWithSelection( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>' );
 	tests.editor.execCommand( 'descriptionList' );
 	// Expected result but impossible because of http://dev.ckeditor.com/ticket/12178.
-	// assert.areSame( '<p>x</p><p>foo[</p><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
-	// Incorrect, temporary result.
-	assert.areSame( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
+	if ( CKEDITOR.env.webkit ) {
+		// Incorrect, temporary result.
+		assert.areSame( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
+	} else {
+		assert.areSame( '<p>x</p><p>foo[</p><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
+	}
 } );
 
 suite( 'Description list - removing from a multiple lists' );
