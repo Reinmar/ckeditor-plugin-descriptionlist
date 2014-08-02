@@ -7,6 +7,8 @@
 
 	CKEDITOR.plugins.add( 'descriptionlist', {
 		lang: 'en',
+		icons: 'descriptionlist,descriptionterm,descriptionvalue', // %REMOVE_LINE_CORE%
+		hidpi: true, // %REMOVE_LINE_CORE%
 		init: function( editor ) {
 			if ( editor.blockless ) {
 				return;
