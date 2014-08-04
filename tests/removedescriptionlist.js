@@ -53,13 +53,7 @@ test( 'through an ordered list', function() {
 test( 'on a selection starting ina single-item list ending outside the list', function() {
 	tests.setHtmlWithSelection( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>' );
 	tests.editor.execCommand( 'descriptionList' );
-	// Expected result but impossible because of http://dev.ckeditor.com/ticket/12178.
-	if ( CKEDITOR.env.webkit ) {
-		// Incorrect, temporary result.
-		assert.areSame( '<p>x</p><dl><dt>foo[</dt></dl><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
-	} else {
-		assert.areSame( '<p>x</p><p>foo[</p><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
-	}
+	assert.areSame( '<p>x</p><p>foo[</p><p>y</p><p>bar]</p><p>z</p>', tests.getHtmlWithSelection() );
 } );
 
 suite( 'Description list - removing from a multiple lists' );
@@ -80,4 +74,36 @@ test( 'two lists, ending in paragraph', function() {
 	tests.setHtmlWithSelection( '<dl><dt>x</dt><dd>[foo</dd></dl><p>y</p><dl><dt>bar</dt></dl><p>z]</p>' );
 	tests.editor.execCommand( 'descriptionList' );
 	assert.areSame( '<dl><dt>x</dt></dl><p>[foo</p><p>y</p><p>bar</p><p>z]</p>', tests.getHtmlWithSelection() );
+} );
+
+suite( 'Description list - removing from list containing blocks' );
+
+test( 'on a single item with h1 inside', function() {
+	tests.setHtmlWithSelection( '<p>x</p><dl><dt><h1>[]foo</h1></dt><dd>bar</dd></dl><p>y</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><h1>[]foo</h1><dl><dd>bar</dd></dl><p>y</p>', tests.getHtmlWithSelection() );
+} );
+
+test( 'on a list with multiple blocks inside', function() {
+	tests.setHtmlWithSelection( '<dl><dt><h1>[foo</h1></dt><dd><p>b</p><p>c</p></dd><dd>bar]</dd></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<h1>[foo</h1><p>b</p><p>c</p><p>bar]</p>', tests.getHtmlWithSelection() );
+} );
+
+test( 'on selection contaning list with blocks', function() {
+	tests.setHtmlWithSelection( '<dl><dt>[foo</dt></dl><p>x</p><dl><dd><h1>bar</h1></dd></dl><p>y]</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>[foo</p><p>x</p><h1>bar</h1><p>y]</p>', tests.getHtmlWithSelection() );
+} );
+
+test( 'on a single item with three blocks inside - selection in middle one', function() {
+	tests.setHtmlWithSelection( '<p>x</p><dl><dt><h1>foo</h1><h2>[]bar</h2><h3>bom</h3></dt></dl><p>y</p>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<p>x</p><h1>foo</h1><h2>[]bar</h2><h3>bom</h3><p>y</p>', tests.getHtmlWithSelection() );
+} );
+
+test( 'on multiple, partially selected items with blocks', function() {
+	tests.setHtmlWithSelection( '<dl><dt><h1>foo</h1><h2>[bar</h2></dt></dl><p>x</p><dl><dt><h3>bom]</h3><h4>baz</h4></dt></dl>' );
+	tests.editor.execCommand( 'descriptionList' );
+	assert.areSame( '<h1>foo</h1><h2>[bar</h2><p>x</p><h3>bom]</h3><h4>baz</h4>', tests.getHtmlWithSelection() );
 } );

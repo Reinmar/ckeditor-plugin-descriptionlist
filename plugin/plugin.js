@@ -153,8 +153,15 @@
 				firstBlock,
 				blocks = [];
 
+			// Expand range so it contains all real blocks from list
+			// items that are at least partially selected.
+			// We need to do that because:
+			// * list item is handled as whole - even partially selected will be entirely removed,
+			// * at the end we remove list items, so blocks must be extracted from them beforehand.
+			expandRangeToEntireItems( range );
+
 			while ( ( block = iterator.getNextParagraph() ) ) {
-				if ( block.is( listElementNames ) ) {
+				if ( block.getAscendant( listElementNames, true ) ) {
 					blocks.push( block );
 				}
 			}
@@ -169,30 +176,32 @@
 				return;
 			}
 
-			var currentList = block.getParent(),
+			var currentList = block.getAscendant( 'dl' ),
 				splitRange = editor.createRange(),
 				listsToCheck = [ currentList ],
-				list;
+				itemsToRemove = [],
+				list, item;
 
-			splitRange.moveToPosition( block, CKEDITOR.POSITION_BEFORE_START );
+			splitRange.moveToPosition( block.getAscendant( listElementNames, true ), CKEDITOR.POSITION_BEFORE_START );
 			currentList = splitRange.splitElement( currentList );
 			listsToCheck.push( currentList );
-			block.renameNode( 'p' );
-			block.insertBefore( currentList );
+			moveBlock();
 
 			while ( ( block = blocks.shift() ) ) {
-				list = block.getParent();
+				list = block.getAscendant( 'dl' );
 				if ( list.equals( currentList ) ) {
-					block.renameNode( 'p' );
-					block.insertBefore( currentList );
+					moveBlock();
 				} else {
 					listsToCheck.push( list );
-					splitRange.moveToPosition( block, CKEDITOR.POSITION_BEFORE_START );
+					splitRange.moveToPosition( block.getAscendant( listElementNames, true ), CKEDITOR.POSITION_BEFORE_START );
 					currentList = splitRange.splitElement( list );
 					listsToCheck.push( currentList );
-					block.renameNode( 'p' );
-					block.insertBefore( currentList );
+					moveBlock();
 				}
+			}
+
+			while ( ( item = itemsToRemove.pop() ) ) {
+				item.remove();
 			}
 
 			while ( ( list = listsToCheck.pop() ) ) {
@@ -202,6 +211,15 @@
 			}
 
 			range.moveToBookmark( bm );
+
+			function moveBlock() {
+				if ( block.is( listElementNames ) ) {
+					block.renameNode( 'p' );
+				} else {
+					itemsToRemove.push( block.getAscendant( listElementNames ) );
+				}
+				block.insertBefore( currentList );
+			}
 		},
 
 		createListContainer: function( editor, block ) {
@@ -305,6 +323,22 @@
 			block.remove();
 
 			return !createDt;
+		}
+	}
+
+	// Expand range so it contains entire list items that may initially be contained
+	// only partially. For example:
+	// <dl>...<dt><h1>foo</h1><h2>[bar</h2></dt><dd>ba]z<h3>bom</h3></dd>...</dl>
+	// after expanding:
+	// <dl>...<dt>[<h1>foo</h1><h2>bar</h2></dt><dd>baz<h3>bom</h3>]</dt>...</dl>
+	function expandRangeToEntireItems( range ) {
+		var item = range.startContainer.getAscendant( listElementNames, true );
+		if ( item ) {
+			range.setStartAt( item, CKEDITOR.POSITION_AFTER_START );
+		}
+		item = range.endContainer.getAscendant( listElementNames, true );
+		if ( item ) {
+			range.setEndAt( item, CKEDITOR.POSITION_BEFORE_END );
 		}
 	}
 
