@@ -11,7 +11,7 @@
 	<script src="jquery-2.1.1.min.js"></script>
 	<script src="../node_modules/chai/chai.js"></script>
 	<script src="../node_modules/mocha/mocha.js"></script>
-	<script src="../ckeditor/ckeditor.js"></script>
+	<script src="../dev/ckeditor/ckeditor.js"></script>
 	<script>
 		mocha.setup( 'qunit' );
 		window.assert = chai.assert;
@@ -38,7 +38,7 @@
 		( function() {
 			'use strict';
 
-			CKEDITOR.plugins.addExternal( 'descriptionlist', '../plugin/' );
+			CKEDITOR.plugins.addExternal( 'descriptionlist', '../../' );
 			CKEDITOR.disableAutoInline = true;
 
 			var el = tests.editorElement = document.getElementById( 'ed' );

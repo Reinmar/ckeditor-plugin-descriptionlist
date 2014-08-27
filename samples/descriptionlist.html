@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<title>CKEditor description list (aka definition list) plugin</title>
-	<script src="../../ckeditor/ckeditor.js"></script>
-	<link href="../../ckeditor/samples/sample.css" rel="stylesheet">
+	<script src="../dev/ckeditor/ckeditor.js"></script>
+	<link href="../dev/ckeditor/samples/sample.css" rel="stylesheet">
 </head>
 <body>
 	<h1 class="samples">
@@ -48,7 +48,7 @@
 
 	<script>
 
-		CKEDITOR.plugins.addExternal( 'descriptionlist', '../plugin/' );
+		CKEDITOR.plugins.addExternal( 'descriptionlist', '../../' );
 
 		CKEDITOR.replace( 'editor1', {
 			extraPlugins: 'descriptionlist',
@@ -73,7 +73,7 @@
 			removePlugins: 'forms,justify,flash,iframe,smiley,colorbutton,font,div,bidi,selectall,find,save,newpage,templates,language,preview,print,pagebreak,stylescombo,indentblock',
 			removeButtons: 'Strike,Subscript,Superscript,PasteFromWord,PasteText',
 			height: 450,
-			contentsCss: [ '../../ckeditor/contents.css', 'assets/contents.css' ]
+			contentsCss: [ '../dev/ckeditor/contents.css', 'assets/contents.css' ]
 		} );
 
 	</script>
