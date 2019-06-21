@@ -6,7 +6,7 @@
 		allListElementNames = { li: 1, dt: 1, dd: 1 };
 
 	CKEDITOR.plugins.add( 'descriptionlist', {
-		lang: 'en',
+		lang: 'en,de,fr',
 		icons: 'descriptionlist,descriptionterm,descriptionvalue', // %REMOVE_LINE_CORE%
 		hidpi: true, // %REMOVE_LINE_CORE%
 		init: function( editor ) {
